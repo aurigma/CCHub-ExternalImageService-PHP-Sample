@@ -8,6 +8,7 @@ use app\Models\ImageInfoModel;
 use app\Models\ImageFileInfoModel;
 use Illuminate\Support\Str;
 use App\Exceptions\ConflictException;
+use App\Exceptions\FileNotFoundException;
 
 class ImageService 
 {
@@ -19,7 +20,7 @@ class ImageService
     public function create($file, $strategy)
     {
         $fileInputData = $this->buildFileInputData($file);
-        $existingFile = $this->existingFileInfo($fileInputData[0], $fileInputData[1]);
+        $existingFile = $this->getFileInfo($fileInputData[0], $fileInputData[1]);
 
         if ($existingFile) {
             return $this->saveFileInfoWithUsingStrategy($fileInputData, $file, $strategy, $existingFile);
@@ -28,14 +29,38 @@ class ImageService
         }
     }
 
-    private function saveFileInfo($fileInputData, $file)
+    public function getAll(string $search, int $take, int $skip)
     {
-        $id = Str::uuid()->toString();
-        $file->storeAs('uploads', $fileInputData[0]);
-        
-        $existingFile = $this->createFileInfoModel($id, $fileInputData[0], $fileInputData[1]);
+        return $this->searchFileInfos($search, $take, $skip);
+    }
 
-        return $this->buildImageInfoModel($existingFile);
+    public function delete($id)
+    {
+        $isFileDeleted = $this->deleteFile($id);
+        return $isFileDeleted;
+    }
+
+    public function get($id)
+    {
+        $existingFileInfo = $this->getFileById($id);
+        return $existingFileInfo;
+    }
+
+    private function buildFileInputData($file) 
+    {
+        return [
+            $name = $file->getClientOriginalName(),
+            $extension = $file->getClientOriginalExtension(),
+            $filePath = "uploads/$name",
+        ];
+    }
+
+    private function getFileInfo($name, $extension) 
+    {
+        return $result = ImageFileInfoModel::where([
+            ['name', '=', $name],
+            ['extension', '=', $extension]
+        ])->first();
     }
 
     private function saveFileInfoWithUsingStrategy($fileInputData, $file, $strategy, $existingFile)
@@ -54,9 +79,9 @@ class ImageService
                 $file->storeAs('uploads', $name);
                 $id = Str::uuid()->toString();
                 
-                $existingFile = $this->createFileInfoModel($id, $name, $fileInputData[1]);
+                $createdFileInfo = $this->createFileInfoModel($id, $name, $fileInputData[1]);
 
-                return $this->buildImageInfoModel($existingFile);
+                return $this->buildImageInfoModel($createdFileInfo);
 
             case 'Abort':
                 throw new ConflictException( 'File already exists' );
@@ -64,6 +89,26 @@ class ImageService
             case 'Skip':
                 return $this->buildImageInfoModel($existingFile);
         }
+    }
+
+    private function saveFileInfo($fileInputData, $file)
+    {
+        $id = Str::uuid()->toString();
+        $file->storeAs('uploads', $fileInputData[0]);
+        
+        $createdFileInfo = $this->createFileInfoModel($id, $fileInputData[0], $fileInputData[1]);
+
+        return $this->buildImageInfoModel($createdFileInfo);
+    }
+
+    private function buildImageInfoModel($createdFileInfo) 
+    {
+        $imageInfoModel = new ImageInfoModel();
+        $imageInfoModel->id = $createdFileInfo->id;
+        $imageInfoModel->title = $createdFileInfo->name;
+        $imageInfoModel->thumbnailUrl = '';
+
+        return $imageInfoModel;
     }
 
     private function createFileInfoModel($id, $name, $fileInputData)
@@ -88,31 +133,57 @@ class ImageService
         return "{$baseName}_{$counter}.$extension";
     }
 
-    private function buildFileInputData($file) 
+    private function searchFileInfos($search, $take, $skip)
     {
-        return [
-            $name = $file->getClientOriginalName(),
-            $extension = $file->getClientOriginalExtension(),
-            $filePath = "uploads/$name",
-        ];
+        $query = null;
+
+        if ($search) {
+            $query = ImageFileInfoModel::where('name', 'LIKE', "%$search%");
+        } else {
+            $query = ImageFileInfoModel::select('*');
+        }
+
+        if ($skip) {
+            $query = $query->skip($skip)->take($take);
+        } else {
+            $query = $query->take($take);
+        }
+        return $query->get();
     }
 
-    private function existingFileInfo($name, $extension) 
+    private function deleteFile($id)
     {
-        return $result = ImageFileInfoModel::where([
-            ['name', '=', $name],
-            ['extension', '=', $extension]
-        ])->first();
+        $fileName = ImageFileInfoModel::where('id', $id)->value('name');
+        if (!isset($fileName)) {
+            throw new FileNotFoundException('FileInfo is not found');
+        }
+        $filePath = storage_path("app/uploads/{$fileName}");
+        if (!file_exists($filePath)) {
+            throw new Exception('File is not found on the server');
+        }
+        $isFileDeleted = unlink($filePath);
+        if ($isFileDeleted == false) {
+            throw new Exception('Internal Server Error');
+        }
+        ImageFileInfoModel::where('id', $id)->delete();
     }
 
-    private function buildImageInfoModel($existingFile) 
+    private function getFileById($id)
     {
-        $imageInfoModel = new ImageInfoModel();
-        $imageInfoModel->id = $existingFile->id;
-        $imageInfoModel->title = $existingFile->name;
-        $imageInfoModel->thumbnailUrl = '';
-
-        return $imageInfoModel;
+        $fileName = ImageFileInfoModel::where('id', $id)->value('name');
+        if (!isset($fileName)) {
+            throw new FileNotFoundException('FileInfo is not found');
+        }
+        $filePath = storage_path("app/uploads/{$fileName}");
+        if (!file_exists($filePath)) {
+            throw new Exception('File is not found on the server');
+        }
+        $fileInfo = ImageFileInfoModel::where('id', $id)->get();
+        if ($fileInfo) {
+            return $fileInfo;
+        } else {
+            throw new FileNotFoundException('File is not found');
+        }
     }
 
 }

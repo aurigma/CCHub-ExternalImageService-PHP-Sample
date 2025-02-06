@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Exception;
 use app\Services\ImageService;
 use App\Exceptions\ConflictException;
+use App\Exceptions\FileNotFoundException;
 
 class ImagesController extends Controller
 {
@@ -32,18 +33,78 @@ class ImagesController extends Controller
             $strategy = $inputStrategy['strategy'];
 
             $result = $this->imageService->create($file, $strategy);
-            $output = $this->mapToDto($result);
-            return response()->json($output, 201);
+            return response()->json($result, 201);
         } catch (\InvalidArgumentException $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['message' => $e->getMessage()], 400);
         } catch (ConflictException $e) {
-            return response()->json(['error' => $e->getMessage()], 409);
+            return response()->json(['message' => $e->getMessage()], 409);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Internal Server Error'], 500);
+            return response()->json(['message' => 'Internal Server Error'], 500);
         }
 
     }
 
+    public function imagesGetAll()
+    {
+        try {
+            $input = Request::all();
+
+            $search = $input['search'];
+
+            $take = $input['take'] ?? 10;
+
+            $skip = $input['skip'] ?? 0;
+
+            $this->validateGetAllInputData($take, $skip);
+            $take = (int) $take;
+            $skip = (int) $skip;
+            $result = $this->imageService->getAll($search, $take, $skip);
+
+            return response()->json([$result], 200);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+    }
+
+    public function imagesDelete($id)
+    {
+        try {
+            $input = Request::all();
+
+            $this->validateDeleteInputData($id);
+            $result = $this->imageService->delete($id);
+            return response($result);
+            
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        } catch (FileNotFoundException $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function imagesGet($id)
+    {
+        try {
+            $input = Request::all();
+
+            $this->validateGetInputData($id);
+            $result = $this->imageService->get($id);
+
+            return response($result);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        } catch (FileNotFoundException $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+    
     private function validateCreationInputData($inputFile, $inputStrategy)
     {
         if (!$inputFile || !isset($inputFile['file'])) {
@@ -54,80 +115,32 @@ class ImagesController extends Controller
         }
     }
 
-    private function mapToDto($result)
+    private function validateGetAllInputData($take, $skip)
     {
-        return [
-            'id' => $result->id,
-            'title' => $result->title,
-            'thumbnailUrl' => $result->thumbnailUrl,
-        ];
-    }
-
-
-    public function imagesGetAll()
-    {
-        $input = Request::all();
-
-        $search = $input['search'];
-
-        $take = $input['take'] ?? 10;
-
-        $skip = $input['skip'];
-
-        $query = null;
-
-        if ($search) {
-            $query = ImageFileInfoModel::where('name', 'LIKE', "%$search%");
-        } else {
-            $query = ImageFileInfoModel::select('*');
+        if ((!ctype_digit($take) && !is_int($take)) || $take < 0) {
+            throw new \InvalidArgumentException('Incorrect data');
         }
-
-        if ($skip) {
-            $query = $query->skip($skip)->take($take);
-        } else {
-            $query = $query->take($take);
+        if ((!ctype_digit($skip) && !is_int($skip)) || $skip < 0) {
+            throw new \InvalidArgumentException('Incorrect data');
         }
-
-        $fileInfos = $query->get();
-
-        return response()->json([$fileInfos], 200);
     }
-    /**
-     * Operation imagesDelete
-     *
-     * Deletes an image by ID..
-     *
-     * @param string $id Image ID in storage. (required)
-     *
-     * @return Http response
-     */
-    public function imagesDelete($id)
+
+    private function validateDeleteInputData($id)
     {
-        $input = Request::all();
-
-        return response('How about implementing imagesDelete as a delete method ?');
+        if (!preg_match('/^[0-9a-fA-F-]{36}$/', $id)) {
+            throw new \InvalidArgumentException('Invalid ID format');
+        }
     }
-    /**
-     * Operation imagesGet
-     *
-     * Returns an image description..
-     *
-     * @param string $id Image ID in storage. (required)
-     *
-     * @return Http response
-     */
-    public function imagesGet($id)
+
+    private function validateGetInputData($id)
     {
-        $input = Request::all();
-
-        //path params validation
-
-
-        //not path params validation
-
-        // return response('How about implementing imagesGet as a get method ?');
-        return response('id = ' . implode(',', $input) );
+        if (!preg_match('/^[0-9a-fA-F-]{36}$/', $id)) {
+            throw new \InvalidArgumentException('Invalid ID format');
+        }
     }
+
+    
+
     /**
      * Operation imagesGetContent
      *
