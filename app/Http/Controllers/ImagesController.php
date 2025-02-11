@@ -31,7 +31,7 @@ class ImagesController extends Controller
 
             $file = $inputFile['file'];
             $strategy = $inputStrategy['strategy'];
-
+            
             $result = $this->imageService->create($file, $strategy);
             return response()->json($result, 201);
         } catch (\InvalidArgumentException $e) {
@@ -41,7 +41,6 @@ class ImagesController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => 'Internal Server Error'], 500);
         }
-
     }
 
     public function imagesGetAll()
@@ -49,7 +48,7 @@ class ImagesController extends Controller
         try {
             $input = Request::all();
 
-            $search = $input['search'];
+            $search = $input['search'] ?? '';
 
             $take = $input['take'] ?? 10;
 
@@ -74,10 +73,10 @@ class ImagesController extends Controller
         try {
             $input = Request::all();
 
-            $this->validateDeleteInputData($id);
+            $this->validateId($id);
             $result = $this->imageService->delete($id);
-            return response($result);
             
+            return response($result);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         } catch (FileNotFoundException $e) {
@@ -85,6 +84,7 @@ class ImagesController extends Controller
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
         }
+        
     }
 
     public function imagesGet($id)
@@ -92,7 +92,7 @@ class ImagesController extends Controller
         try {
             $input = Request::all();
 
-            $this->validateGetInputData($id);
+            $this->validateId($id);
             $result = $this->imageService->get($id);
 
             return response($result);
@@ -102,6 +102,39 @@ class ImagesController extends Controller
             return response()->json(['message' => $e->getMessage()], 404);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function imagesGetContent($id)
+    {
+        try {
+            $input = Request::all();
+
+            $this->validateId($id);
+            $result = $this->imageService->getImageFile($id);
+
+            return response()->file($result);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        } catch (FileNotFoundException $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Internal Server Error'], 500);
+        }
+    }
+
+    public function imagesGetContentUrl($id)
+    {
+        try {
+            $input = Request::all();
+            $url = url("/api/free-image/{$id}/content");
+            return response()->json(['url' => $url]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        } catch (FileNotFoundException $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Internal Server Error'], 500);
         }
     }
     
@@ -125,60 +158,11 @@ class ImagesController extends Controller
         }
     }
 
-    private function validateDeleteInputData($id)
+    private function validateId($id)
     {
         if (!preg_match('/^[0-9a-fA-F-]{36}$/', $id)) {
             throw new \InvalidArgumentException('Invalid ID format');
         }
     }
 
-    private function validateGetInputData($id)
-    {
-        if (!preg_match('/^[0-9a-fA-F-]{36}$/', $id)) {
-            throw new \InvalidArgumentException('Invalid ID format');
-        }
-    }
-
-    
-
-    /**
-     * Operation imagesGetContent
-     *
-     * Returns an image content by ID..
-     *
-     * @param string $id Image ID in storage. (required)
-     *
-     * @return Http response
-     */
-    public function imagesGetContent($id)
-    {
-        $input = Request::all();
-
-        //path params validation
-
-
-        //not path params validation
-
-        return response('How about implementing imagesGetContent as a get method ?');
-    }
-    /**
-     * Operation imagesGetContentUrl
-     *
-     * Returns an image content URL by ID..
-     *
-     * @param string $id Image ID in storage. (required)
-     *
-     * @return Http response
-     */
-    public function imagesGetContentUrl($id)
-    {
-        $input = Request::all();
-
-        //path params validation
-
-
-        //not path params validation
-
-        return response('How about implementing imagesGetContentUrl as a get method ?');
-    }
 }

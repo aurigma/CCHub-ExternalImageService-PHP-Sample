@@ -76,3 +76,7 @@ Route::get('/api/image-storage/v1/getinfo', 'InfoController@getInfo');
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/free-image/{id}/content', 'FreeImagesController@imagesGetContent');
+
+Route::get('/preview-image/{id}', 'PreviewController@previewGet');

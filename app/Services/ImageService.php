@@ -9,12 +9,18 @@ use app\Models\ImageFileInfoModel;
 use Illuminate\Support\Str;
 use App\Exceptions\ConflictException;
 use App\Exceptions\FileNotFoundException;
+use app\Services\ImageProcessingService;
+use app\Services\CcHubSettingsService;
+use App\Models\CcHubSettingsModel;
+
 
 class ImageService 
 {
+    private ImageProcessingService $imageProcessingService;
 
-    public function __construct()
+    public function __construct(ImageProcessingService $imageProcessingService)
     {
+        $this->imageProcessingService = $imageProcessingService;
     }
 
     public function create($file, $strategy)
@@ -44,6 +50,37 @@ class ImageService
     {
         $existingFileInfo = $this->getFileById($id);
         return $existingFileInfo;
+    }
+
+    public function getImageFile($id)
+    {
+        $fileName = ImageFileInfoModel::where('id', $id)->value('name');
+        if (!isset($fileName)) {
+            throw new FileNotFoundException('FileInfo is not found');
+        }
+        $filePath = storage_path("app/uploads/{$fileName}");
+        if (!file_exists($filePath)) {
+            throw new Exception('File is not found on the server');
+        }
+        return $filePath;
+    }
+
+    public function getPreviewFile($id)
+    {
+        $fileName = ImageFileInfoModel::where('id', $id)->value('name');
+        if (!isset($fileName)) {
+            throw new FileNotFoundException('FileInfo is not found');
+        }
+        $filePath = storage_path("app/uploads/{$fileName}");
+        if (!file_exists($filePath)) {
+            throw new Exception('File is not found on the server');
+        }
+        $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
+        $previewFilePath = storage_path("app/preview/preview_{$fileNameWithoutExtension}.png");
+        if (!file_exists($previewFilePath)) {
+            throw new Exception('File is not found on the server');
+        }
+        return $previewFilePath;
     }
 
     private function buildFileInputData($file) 
@@ -77,6 +114,8 @@ class ImageService
                 $name = $this->getUniqueFileName($fileInputData[0], $fileInputData[1]);
                 $filePath = "uploads/$name";
                 $file->storeAs('uploads', $name);
+                $nameWithoutExtension = pathinfo($name, PATHINFO_FILENAME);
+                $previewName = $this->imageProcessingService->create($file, $nameWithoutExtension);
                 $id = Str::uuid()->toString();
                 
                 $createdFileInfo = $this->createFileInfoModel($id, $name, $fileInputData[1]);
@@ -95,6 +134,9 @@ class ImageService
     {
         $id = Str::uuid()->toString();
         $file->storeAs('uploads', $fileInputData[0]);
+        $name = $fileInputData[0];
+        $nameWithoutExtension = pathinfo($name, PATHINFO_FILENAME);
+        $previewName = $this->imageProcessingService->create($file, $nameWithoutExtension);
         
         $createdFileInfo = $this->createFileInfoModel($id, $fileInputData[0], $fileInputData[1]);
 
@@ -106,7 +148,7 @@ class ImageService
         $imageInfoModel = new ImageInfoModel();
         $imageInfoModel->id = $createdFileInfo->id;
         $imageInfoModel->title = $createdFileInfo->name;
-        $imageInfoModel->thumbnailUrl = '';
+        $imageInfoModel->thumbnailUrl = url("/api/preview-image/{$imageInfoModel->id}");
 
         return $imageInfoModel;
     }

@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\ImageService;
+use app\Services\CcHubSettingsService;
+use app\Services\CcHubTokenService;
+use app\Services\ImageProcessingService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
     {
         //
         $this->app->bind(ImageService::class);
+        $this->app->bind(CcHubSettingsService::class);
+        $this->app->bind(CcHubTokenService::class);
+        $this->app->bind(ImageProcessingService::class);
     }
 
     /**
