@@ -80,3 +80,12 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::get('/free-image/{id}/content', 'FreeImagesController@imagesGetContent');
 
 Route::get('/preview-image/{id}', 'PreviewController@previewGet');
+
+Route::group([
+    'prefix' => 'auth'
+], function () {
+    Route::post('login', 'JWTAuthController@login');
+    Route::post('registration', 'JWTAuthController@registration');
+    Route::post('logout', 'JWTAuthController@logout');
+    Route::post('refresh', 'JWTAuthController@refresh');
+});

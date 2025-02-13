@@ -11,6 +11,7 @@ use Exception;
 use app\Services\ImageService;
 use App\Exceptions\ConflictException;
 use App\Exceptions\FileNotFoundException;
+use Illuminate\Auth\AuthenticationException;
 
 class ImagesController extends Controller
 {
@@ -19,6 +20,7 @@ class ImagesController extends Controller
     public function __construct(ImageService $imageService)
     {
         $this->imageService = $imageService;
+        $this->middleware('auth:api', ['except' => []]);
     }
 
     public function imagesCreate()
@@ -127,6 +129,7 @@ class ImagesController extends Controller
     {
         try {
             $input = Request::all();
+            $this->imageService->get($id);
             $url = url("/api/free-image/{$id}/content");
             return response()->json(['url' => $url]);
         } catch (\InvalidArgumentException $e) {

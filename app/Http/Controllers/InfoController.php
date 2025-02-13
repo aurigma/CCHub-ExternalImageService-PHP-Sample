@@ -26,9 +26,6 @@ use app\Models\ImageStorageFeature;
 
 class InfoController extends Controller
 {
-
-    // private ImageStorageInfoModel $imageStorageInfoModel; // почему ошибка..
-
     /**
      * Constructor
      */
