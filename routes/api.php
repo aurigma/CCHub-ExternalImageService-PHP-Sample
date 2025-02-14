@@ -71,8 +71,6 @@ Route::get('/image-storage/v1/images/{id}/content-url', 'ImagesController@images
  */
 Route::get('/image-storage/v1/info', 'InfoController@infoGetInfo');
 
-Route::get('/image-storage/v1/getinfo', 'InfoController@getInfo');
-
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });

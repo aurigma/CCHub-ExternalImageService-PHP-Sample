@@ -43,26 +43,18 @@ class InfoController extends Controller
      */
     public function infoGetInfo()
     {
-        $input = Request::all();
-
-        //path params validation
-
-
-        //not path params validation
-
-        return response('How about implementing infoGetInfo as a get method ?');
-    }
-
-    public function getInfo()
-    {
         $imageStorageInfoModel = new ImageStorageInfoModel();
 
         $imageStorageInfoModel->name = 'Image source';
         $imageStorageInfoModel->version = '0.0.1';
         $imageStorageInfoModel->features = [
-            ImageStorageFeature::ALLOW_CREATE
+            ImageStorageFeature::ALLOW_CREATE,
+            ImageStorageFeature::ALLOW_DELETE,
+            ImageStorageFeature::ALLOW_GET_CONTENT_URL,
+            ImageStorageFeature::ALLOW_SEARCH
         ];
 
         return response()->json($imageStorageInfoModel, 200);
     }
+
 }
