@@ -7,7 +7,7 @@ use App\Exceptions\FileNotFoundException;
 use app\Services\ImageService;
 
 
-class PreviewController extends Controller
+class PreviewsController extends Controller
 {
 
     private $imageService;
@@ -17,7 +17,7 @@ class PreviewController extends Controller
         $this->imageService = $imageService;
     }
 
-    public function previewGet($id)
+    public function previewsGet($id)
     {
         try {
 

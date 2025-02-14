@@ -27,32 +27,35 @@ class ImageProcessingService
         $this->tokenService = $tokenService;
     }
 
-    public function create($file, $name)
+    public function create($userId, $file, $name)
     {
         $designAtomsServiceApi = $this->getDesignAtomsImageApi();
-        $splFile = $this->convertUploadedFileToSpl($file);
+        $splFile = $this->convertUploadedFileToSpl($userId, $file);
         $response = $designAtomsServiceApi->designAtomsImagesRenderImagePreviewFromFile(
             $attachment = null, $tenantId = null, $source_file = $splFile, $mockup_owner_id = null, 
             $mockup_id = null, $width = 150, $height = 150, ImagePreviewFormat::PNG, $fit_mode = null);
-        $previewFileName = $this->savePreview($response, $name);
+        $previewFileName = $this->savePreview($userId, $response, $name);
 
         return $previewFileName;
     }
 
-    private function convertUploadedFileToSpl($file)
+    private function convertUploadedFileToSpl($userId, $file)
     {
         $fileName = $file->getClientOriginalName();
-        $filePath = storage_path("app/uploads/$fileName");
+        $filePath = storage_path("app/$userId/uploads/$fileName");
         $file = new SplFileObject($filePath, 'r');
         
         return $file;
     }
 
-    private function savePreview($response, $name)
+    private function savePreview($userId, $response, $name)
     {
         $previewPath = $response->getPathname();
         $content = file_get_contents($previewPath);
-        $previewDirectory = storage_path('app/preview');
+        $previewDirectory = storage_path("app/$userId/preview");
+        if (!is_dir($previewDirectory)) {
+            mkdir($previewDirectory, 0777, true);
+        }
         $previewFileName = "preview_{$name}.png";
         $previewFullPath = "$previewDirectory/$previewFileName";
         file_put_contents($previewFullPath, $content);

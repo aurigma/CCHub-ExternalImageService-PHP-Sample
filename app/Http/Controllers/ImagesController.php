@@ -51,7 +51,7 @@ class ImagesController extends Controller
             $input = Request::all();
 
             $search = $input['search'] ?? '';
-
+            
             $take = $input['take'] ?? 10;
 
             $skip = $input['skip'] ?? 0;
@@ -97,7 +97,7 @@ class ImagesController extends Controller
             $this->validateId($id);
             $result = $this->imageService->get($id);
 
-            return response($result);
+            return response()->json([$result], 200);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         } catch (FileNotFoundException $e) {
@@ -130,7 +130,7 @@ class ImagesController extends Controller
         try {
             $input = Request::all();
             $this->imageService->get($id);
-            $url = url("/api/free-image/{$id}/content");
+            $url = url("/api/free-images/{$id}/content");
             return response()->json(['url' => $url]);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);

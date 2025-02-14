@@ -15,11 +15,6 @@ class JWTAuthController extends Controller
         $this->middleware('auth:api', ['except' => ['login', 'registration']]);
     }
 
-     /**
-     * Get a JWT via given credentials.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function login()
     {
         $credentials = request(['email', 'password']);
@@ -35,9 +30,6 @@ class JWTAuthController extends Controller
         ]);
     }
 
-    /**
-     * User registration
-     */
     public function registration()
     {
         $name = request('name');
@@ -53,11 +45,6 @@ class JWTAuthController extends Controller
         return response()->json(['message' => 'Successfully registration!']);
     }
 
-    /**
-     * Log the user out (Invalidate the token).
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function logout()
     {
         auth()->logout();
@@ -65,23 +52,11 @@ class JWTAuthController extends Controller
         return response()->json(['message' => 'Successfully logged out']);
     }
 
-    /**
-     * Refresh a token.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function refresh()
     {
         return $this->respondWithToken(auth()->refresh());
     }
 
-    /**
-     * Get the token array structure.
-     *
-     * @param  string $token
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     protected function respondWithToken($token)
     {
         return response()->json([

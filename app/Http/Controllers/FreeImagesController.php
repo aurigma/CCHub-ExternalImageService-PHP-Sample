@@ -17,12 +17,12 @@ class FreeImagesController extends Controller
         $this->imageService = $imageService;
     }
 
-    public function imagesGetContent($id)
+    public function freeImagesGetContent($id)
     {
         try {
 
             $this->validateId($id);
-            $result = $this->imageService->getPreviewFile($id);
+            $result = $this->imageService->getFreeImageFile($id);
 
             return response()->file($result);
         } catch (\InvalidArgumentException $e) {

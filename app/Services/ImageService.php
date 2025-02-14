@@ -12,53 +12,80 @@ use App\Exceptions\FileNotFoundException;
 use app\Services\ImageProcessingService;
 use app\Services\CcHubSettingsService;
 use App\Models\CcHubSettingsModel;
+use App\Services\AuthService;
+use Exception;
 
 
 class ImageService 
 {
     private ImageProcessingService $imageProcessingService;
+    private AuthService $authService;
 
-    public function __construct(ImageProcessingService $imageProcessingService)
+    public function __construct(ImageProcessingService $imageProcessingService, AuthService $authService)
     {
         $this->imageProcessingService = $imageProcessingService;
+        $this->authService = $authService;
     }
 
     public function create($file, $strategy)
     {
-        $fileInputData = $this->buildFileInputData($file);
-        $existingFile = $this->getFileInfo($fileInputData[0], $fileInputData[1]);
+        $userId = $this->getUserId();
+        $fileInputData = $this->buildFileInputData($file, $userId);
+        $existingFile = $this->getFileInfo($fileInputData[0], $fileInputData[1], $fileInputData[3]);
+        
 
         if ($existingFile) {
-            return $this->saveFileInfoWithUsingStrategy($fileInputData, $file, $strategy, $existingFile);
+            return $this->saveFileInfoWithUsingStrategy($userId, $fileInputData, $file, $strategy, $existingFile);
         } else {
-            return $this->saveFileInfo($fileInputData, $file);
+            return $this->saveFileInfo($userId, $fileInputData, $file);
         }
     }
 
     public function getAll(string $search, int $take, int $skip)
     {
-        return $this->searchFileInfos($search, $take, $skip);
+        $userId = $this->getUserId();
+        return $this->searchFileInfos($userId, $search, $take, $skip);
     }
 
     public function delete($id)
     {
-        $isFileDeleted = $this->deleteFile($id);
+        $userId = $this->getUserId();
+        $isFileDeleted = $this->deleteFile($userId, $id);
         return $isFileDeleted;
     }
 
     public function get($id)
     {
-        $existingFileInfo = $this->getFileById($id);
+        $userId = $this->getUserId();
+        $existingFileInfo = $this->getFileById($userId, $id);
         return $existingFileInfo;
     }
 
     public function getImageFile($id)
     {
+        $userId = $this->getUserId();
+        $fileName = ImageFileInfoModel::where([
+            ['id', '=', $id],
+            ['userId', '=', $userId]
+        ])->value('name');
+        if (!isset($fileName)) {
+            throw new FileNotFoundException('FileInfo is not found');
+        }
+        $filePath = storage_path("app/$userId/uploads/{$fileName}");
+        if (!file_exists($filePath)) {
+            throw new Exception('File is not found on the server');
+        }
+        return $filePath;
+    }
+
+    public function getFreeImageFile($id)
+    {
         $fileName = ImageFileInfoModel::where('id', $id)->value('name');
         if (!isset($fileName)) {
             throw new FileNotFoundException('FileInfo is not found');
         }
-        $filePath = storage_path("app/uploads/{$fileName}");
+        $userId = ImageFileInfoModel::where('id', $id)->value('userId');
+        $filePath = storage_path("app/$userId/uploads/{$fileName}");
         if (!file_exists($filePath)) {
             throw new Exception('File is not found on the server');
         }
@@ -71,54 +98,60 @@ class ImageService
         if (!isset($fileName)) {
             throw new FileNotFoundException('FileInfo is not found');
         }
-        $filePath = storage_path("app/uploads/{$fileName}");
+        $userId = ImageFileInfoModel::where('id', $id)->value('userId');
+        $filePath = storage_path("app/$userId/uploads/{$fileName}");
         if (!file_exists($filePath)) {
             throw new Exception('File is not found on the server');
         }
-        $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
-        $previewFilePath = storage_path("app/preview/preview_{$fileNameWithoutExtension}.png");
+        $previewNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
+        $previewFilePath = storage_path("app/$userId/preview/preview_{$previewNameWithoutExtension}.png");
         if (!file_exists($previewFilePath)) {
             throw new Exception('File is not found on the server');
         }
         return $previewFilePath;
     }
 
-    private function buildFileInputData($file) 
+    private function buildFileInputData($file, $userId) 
     {
         return [
             $name = $file->getClientOriginalName(),
             $extension = $file->getClientOriginalExtension(),
-            $filePath = "uploads/$name",
+            $filePath = "$userId/uploads/$name",
+            $userId = $userId,
         ];
     }
 
-    private function getFileInfo($name, $extension) 
+    private function getFileInfo($name, $extension, $userId) 
     {
         return $result = ImageFileInfoModel::where([
             ['name', '=', $name],
-            ['extension', '=', $extension]
+            ['extension', '=', $extension],
+            ['userId', '=', $userId]
         ])->first();
     }
 
-    private function saveFileInfoWithUsingStrategy($fileInputData, $file, $strategy, $existingFile)
+    private function saveFileInfoWithUsingStrategy($userId, $fileInputData, $file, $strategy, $existingFile)
     {
         switch ($strategy) {
             case 'Overwrite':
                 Storage::delete($fileInputData[2]);
-                $file->storeAs('uploads', $fileInputData[0]);
+                $file->storeAs("$userId/uploads", $fileInputData[0]);
                 $existingFile->touch();
+                $nameWithoutExtension = pathinfo($fileInputData[0], PATHINFO_FILENAME);
+                Storage::delete("preview_{$nameWithoutExtension}.png");
+                $previewName = $this->imageProcessingService->create($userId, $file, $nameWithoutExtension);
                 
                 return $this->buildImageInfoModel($existingFile);
 
             case 'Rename':
-                $name = $this->getUniqueFileName($fileInputData[0], $fileInputData[1]);
-                $filePath = "uploads/$name";
-                $file->storeAs('uploads', $name);
+                $name = $this->getUniqueFileName($userId, $fileInputData[0], $fileInputData[1]);
+                $filePath = "$userId/uploads/$name";
+                $file->storeAs("$userId/uploads", $name);
                 $nameWithoutExtension = pathinfo($name, PATHINFO_FILENAME);
-                $previewName = $this->imageProcessingService->create($file, $nameWithoutExtension);
+                $previewName = $this->imageProcessingService->create($userId, $file, $nameWithoutExtension);
                 $id = Str::uuid()->toString();
                 
-                $createdFileInfo = $this->createFileInfoModel($id, $name, $fileInputData[1]);
+                $createdFileInfo = $this->createFileInfoModel($id, $name, $fileInputData[1], $userId);
 
                 return $this->buildImageInfoModel($createdFileInfo);
 
@@ -130,59 +163,63 @@ class ImageService
         }
     }
 
-    private function saveFileInfo($fileInputData, $file)
+    private function saveFileInfo($userId, $fileInputData, $file)
     {
         $id = Str::uuid()->toString();
-        $file->storeAs('uploads', $fileInputData[0]);
+        $file->storeAs("$userId/uploads", $fileInputData[0]);
         $name = $fileInputData[0];
         $nameWithoutExtension = pathinfo($name, PATHINFO_FILENAME);
-        $previewName = $this->imageProcessingService->create($file, $nameWithoutExtension);
+        $previewName = $this->imageProcessingService->create($userId, $file, $nameWithoutExtension);
         
-        $createdFileInfo = $this->createFileInfoModel($id, $fileInputData[0], $fileInputData[1]);
+        $createdFileInfo = $this->createFileInfoModel($id, $fileInputData[0], $fileInputData[1], $userId);
 
         return $this->buildImageInfoModel($createdFileInfo);
     }
 
-    private function buildImageInfoModel($createdFileInfo) 
+    private function buildImageInfoModel($fileInfo) 
     {
         $imageInfoModel = new ImageInfoModel();
-        $imageInfoModel->id = $createdFileInfo->id;
-        $imageInfoModel->title = $createdFileInfo->name;
+        $imageInfoModel->id = $fileInfo->id;
+        $imageInfoModel->title = $fileInfo->name;
         $imageInfoModel->thumbnailUrl = url("/api/preview-image/{$imageInfoModel->id}");
 
         return $imageInfoModel;
     }
 
-    private function createFileInfoModel($id, $name, $fileInputData)
+    private function createFileInfoModel($id, $name, $fileInputData, $userId)
     {
         $fileInfo = ImageFileInfoModel::create([
             'id' => $id,
             'name' => $name,
             'extension' => $fileInputData,
+            'userId' => $userId,
         ]);
         return $fileInfo;
     }
 
-    private function getUniqueFileName($fileName, $extension)
+    private function getUniqueFileName($userId, $fileName, $extension)
     {
         $baseName = pathinfo($fileName, PATHINFO_FILENAME);
         $counter = 1;
 
-        while (Storage::exists("uploads/{$baseName}_{$counter}.$extension")) {
+        while (Storage::exists("$userId/uploads/{$baseName}_{$counter}.$extension")) {
             $counter++;
         }
 
         return "{$baseName}_{$counter}.$extension";
     }
 
-    private function searchFileInfos($search, $take, $skip)
+    private function searchFileInfos($userId, $search, $take, $skip)
     {
         $query = null;
 
         if ($search) {
-            $query = ImageFileInfoModel::where('name', 'LIKE', "%$search%");
+            $query = ImageFileInfoModel::where([
+                ['name', 'LIKE', "%$search%"],
+                ['userId', '=', $userId]
+            ]);
         } else {
-            $query = ImageFileInfoModel::select('*');
+            $query = ImageFileInfoModel::where('userId', '=', $userId);
         }
 
         if ($skip) {
@@ -190,19 +227,32 @@ class ImageService
         } else {
             $query = $query->take($take);
         }
-        return $query->get();
+        $result = $query->get();
+
+        for ($i = 0; $i < count($result); $i++)
+        {
+            $fileInfos[] = $this->buildImageInfoModel($result[$i]);
+        }
+
+        return $fileInfos;
     }
 
-    private function deleteFile($id)
+    private function deleteFile($userId, $id)
     {
-        $fileName = ImageFileInfoModel::where('id', $id)->value('name');
+        $fileName = ImageFileInfoModel::where([
+            ['id', '=', $id],
+            ['userId', '=', $userId]
+            ])->value('name');
         if (!isset($fileName)) {
             throw new FileNotFoundException('FileInfo is not found');
         }
-        $filePath = storage_path("app/uploads/{$fileName}");
+        $filePath = storage_path("app/$userId/uploads/{$fileName}");
+        $fileNameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME);
+        $previewPath = storage_path("app/$userId/preview/preview_{$fileNameWithoutExtension}.png");
         if (!file_exists($filePath)) {
             throw new Exception('File is not found on the server');
         }
+        $isPreviewDeleted = unlink($previewPath);
         $isFileDeleted = unlink($filePath);
         if ($isFileDeleted == false) {
             throw new Exception('Internal Server Error');
@@ -210,22 +260,33 @@ class ImageService
         ImageFileInfoModel::where('id', $id)->delete();
     }
 
-    private function getFileById($id)
+    private function getFileById($userId, $id)
     {
-        $fileName = ImageFileInfoModel::where('id', $id)->value('name');
+        $fileName = ImageFileInfoModel::where([
+            ['id', '=', $id],
+            ['userId', '=', $userId]
+        ])->value('name');
         if (!isset($fileName)) {
             throw new FileNotFoundException('FileInfo is not found');
         }
-        $filePath = storage_path("app/uploads/{$fileName}");
+        $filePath = storage_path("app/$userId/uploads/{$fileName}");
         if (!file_exists($filePath)) {
             throw new Exception('File is not found on the server');
         }
-        $fileInfo = ImageFileInfoModel::where('id', $id)->get();
+        $fileInfo = ImageFileInfoModel::where([
+            ['id', '=', $id],
+            ['userId', '=', $userId]
+        ])->first();
         if ($fileInfo) {
-            return $fileInfo;
+            return $this->buildImageInfoModel($fileInfo);
         } else {
             throw new FileNotFoundException('File is not found');
         }
+    }
+
+    private function getUserId()
+    {
+        return $this->authService->getUserId();
     }
 
 }

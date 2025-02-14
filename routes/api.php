@@ -27,59 +27,59 @@ use Illuminate\Support\Facades\Route;
  * Notes: 
  * Output-Formats: [text/plain, application/json, text/json]
  */
-Route::post('/api/image-storage/v1/images', 'ImagesController@imagesCreate');
+Route::post('/image-storage/v1/images', 'ImagesController@imagesCreate');
 /**
  * get imagesGetAll
  * Summary: Returns a list of image decriptions.
  * Notes: 
  * Output-Formats: [text/plain, application/json, text/json]
  */
-Route::get('/api/image-storage/v1/images', 'ImagesController@imagesGetAll');
+Route::get('/image-storage/v1/images', 'ImagesController@imagesGetAll');
 /**
  * delete imagesDelete
  * Summary: Deletes an image by ID.
  * Notes: 
  * Output-Formats: [text/plain, application/json, text/json]
  */
-Route::delete('/api/image-storage/v1/images/{id}', 'ImagesController@imagesDelete');
+Route::delete('/image-storage/v1/images/{id}', 'ImagesController@imagesDelete');
 /**
  * get imagesGet
  * Summary: Returns an image description.
  * Notes: 
  * Output-Formats: [text/plain, application/json, text/json]
  */
-Route::get('/api/image-storage/v1/images/{id}', 'ImagesController@imagesGet');
+Route::get('/image-storage/v1/images/{id}', 'ImagesController@imagesGet');
 /**
  * get imagesGetContent
  * Summary: Returns an image content by ID.
  * Notes: 
  * Output-Formats: [text/plain, application/json, text/json]
  */
-Route::get('/api/image-storage/v1/images/{id}/content', 'ImagesController@imagesGetContent');
+Route::get('/image-storage/v1/images/{id}/content', 'ImagesController@imagesGetContent');
 /**
  * get imagesGetContentUrl
  * Summary: Returns an image content URL by ID.
  * Notes: 
  * Output-Formats: [text/plain, application/json, text/json]
  */
-Route::get('/api/image-storage/v1/images/{id}/content-url', 'ImagesController@imagesGetContentUrl');
+Route::get('/image-storage/v1/images/{id}/content-url', 'ImagesController@imagesGetContentUrl');
 /**
  * get infoGetInfo
  * Summary: Returns external storage features.
  * Notes: 
  * Output-Formats: [text/plain, application/json, text/json]
  */
-Route::get('/api/image-storage/v1/info', 'InfoController@infoGetInfo');
+Route::get('/image-storage/v1/info', 'InfoController@infoGetInfo');
 
-Route::get('/api/image-storage/v1/getinfo', 'InfoController@getInfo');
+Route::get('/image-storage/v1/getinfo', 'InfoController@getInfo');
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/free-image/{id}/content', 'FreeImagesController@imagesGetContent');
+Route::get('/free-images/{id}/content', 'FreeImagesController@freeImagesGetContent');
 
-Route::get('/preview-image/{id}', 'PreviewController@previewGet');
+Route::get('/previews/{id}', 'PreviewsController@previewsGet');
 
 Route::group([
     'prefix' => 'auth'

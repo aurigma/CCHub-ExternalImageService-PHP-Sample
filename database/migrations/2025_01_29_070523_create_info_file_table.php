@@ -17,6 +17,8 @@ class CreateInfoFileTable extends Migration
             $table->uuid('id')->primary();
             $table->string('name');
             $table->string('extension');
+            $table->unsignedBigInteger('userId');
+            $table->foreign('userId')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
