@@ -1,20 +1,113 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# External Image Server Php Sample
+Software for demonstration of work with user's photos and obtaining preliminary images.
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+# Installation process 
+To set up this project, ensure you have the following installed:
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+PHP 7.4
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+MySQL Server 8.0
+
+After installing PHP, enable the following extensions in your php.ini file (you can copy from php.ini-development if needed):
+
+extension=curl
+extension=fileinfo
+extension=mbstring
+extension=mysqli
+extension=openssl
+extension=pdo_mysql
+
+Additionally, for Windows systems, download the cacert.pem certificate from this link: https://curl.se/docs/caextract.html and specify its path in the php.ini file:
+
+curl.cainfo = ‘C:/<YOUR_PATH>/cacert.pem’.
+
+
+# Software dependencies
+
+Install project dependencies using Composer:
+
+composer install
+
+
+# Environment Configuration
+
+Create the .env file by running:
+
+cp .env.example .env
+
+Then, set the following parameters in your .env file:
+
+CC_HUB_API_URL=<YOUR_API_URL_FROM_CCHUB>
+CC_HUB_CLIENT_ID=<YOUR_CLIENT_ID_FROM_CCHUB>
+CC_HUB_CLIENT_SECRET=<YOUR_CLIENT_SECRET_FROM_CCHUB>
+
+
+# Generating the JWT Secret
+
+Run the following command to generate the JWT secret key:
+
+php artisan jwt:secret
+
+By default, the token remains active for 60 minutes. You can modify this duration by changing the JWT_TTL parameter in the .env file.
+
+
+# Database Setup
+
+To connect to your database, update the .env file with your database credentials:
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=<YOUR_DATABASE_NAME>
+DB_USERNAME=<YOUR_USERNAME>
+DB_PASSWORD=<YOUR_PASSWORD>
+
+Then, run the following command to migrate the database:
+
+php artisan migrate
+
+After a successful migration, your database should contain tables including users and file_infos, which store user data and file information.
+
+
+# Running the Application
+
+To start the project, use the following command:
+
+php artisan serve
+
+This will run the application on a local server. Ensure that ports 8000 (for the Laravel server) and 3306 (for MySQL) are not in use by other applications.
+
+To test the API endpoints, refer to the route definitions in routes/api.php and prepend each route with:
+
+http://localhost:8000/api
+
+
+# Authentication & Token Management
+
+Register a New User
+To register a new user, send a POST request to:
+
+http://localhost:8000/api/auth/registration
+
+Method: POST
+Request Body (form-data):
+name = <your_value>
+email = <your_value> (must be unique)
+password = <your_value>
+All attributes should be sent as text.
+
+Obtain an Authentication Token
+To obtain an authentication token, log in with a registered user by sending a POST request to:
+
+http://localhost:8000/api/auth/login
+
+Method: POST
+Request Body (form-data):
+email = <your_value> (must match a registered email)
+password = <your_value>
+All attributes should be sent as text.
+
+After a successful login, the response will contain a JWT token, which should be included in the Authorization header for subsequent API requests:
+
+Authorization: Bearer <your_token>
