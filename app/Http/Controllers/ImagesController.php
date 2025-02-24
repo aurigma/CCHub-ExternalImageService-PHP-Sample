@@ -32,7 +32,7 @@ class ImagesController extends Controller
             $this->validateCreationInputData($inputFile, $inputStrategy);
 
             $file = $inputFile['file'];
-            $strategy = $inputStrategy['strategy'];
+            $strategy = $inputStrategy['solveConflictStrategy'];
             
             $result = $this->imageService->create($file, $strategy);
             return response()->json($result, 201);
@@ -124,29 +124,13 @@ class ImagesController extends Controller
             return response()->json(['message' => 'Internal Server Error'], 500);
         }
     }
-
-    public function imagesGetContentUrl($id)
-    {
-        try {
-            $input = Request::all();
-            $this->imageService->get($id);
-            $url = url("/api/free-images/{$id}/content");
-            return response()->json(['url' => $url]);
-        } catch (\InvalidArgumentException $e) {
-            return response()->json(['message' => $e->getMessage()], 400);
-        } catch (FileNotFoundException $e) {
-            return response()->json(['message' => $e->getMessage()], 404);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Internal Server Error'], 500);
-        }
-    }
     
     private function validateCreationInputData($inputFile, $inputStrategy)
     {
         if (!$inputFile || !isset($inputFile['file'])) {
             throw new \InvalidArgumentException('No file uploaded');
         }
-        if (!$inputStrategy || !isset($inputStrategy['strategy'])) {
+        if (!$inputStrategy || !isset($inputStrategy['solveConflictStrategy'])) {
             throw new \InvalidArgumentException('No strategy provided');
         }
     }

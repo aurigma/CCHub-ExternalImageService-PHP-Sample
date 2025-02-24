@@ -29,14 +29,18 @@ curl.cainfo = ‘C:/<YOUR_PATH>/cacert.pem’.
 
 Install project dependencies using Composer:
 
+```
 composer install
+```
 
 
 # Environment Configuration
 
 Create the .env file by running:
 
+```
 cp .env.example .env
+```
 
 Then, set the following parameters in your .env file:
 
@@ -51,7 +55,9 @@ CC_HUB_CLIENT_SECRET=<YOUR_CLIENT_SECRET_FROM_CCHUB>
 
 Run the following command to generate the JWT secret key:
 
+```
 php artisan jwt:secret
+```
 
 By default, the token remains active for 60 minutes. You can modify this duration by changing the JWT_TTL parameter in the .env file.
 
@@ -80,7 +86,9 @@ After a successful migration, your database should contain tables including user
 
 To start the project, use the following command:
 
+```
 php artisan serve
+```
 
 This will run the application on a local server. Ensure that ports 8000 (for the Laravel server) and 3306 (for MySQL) are not in use by other applications.
 
@@ -94,7 +102,7 @@ http://localhost:8000/api
 Register a New User
 To register a new user, send a POST request to:
 
-http://localhost:8000/api/auth/registration
+http://localhost:8000/api/auth/register
 
 ```
 Method: POST

@@ -12,7 +12,7 @@ class JWTAuthController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'registration']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register']]);
     }
 
     public function login()
@@ -30,7 +30,7 @@ class JWTAuthController extends Controller
         ]);
     }
 
-    public function registration()
+    public function register()
     {
         $name = request('name');
         $email = request('email');
@@ -42,7 +42,7 @@ class JWTAuthController extends Controller
         $user->password = Hash::make($password);
         $user->save();
 
-        return response()->json(['message' => 'Successfully registration!']);
+        return response()->json(['message' => 'Successful registration!']);
     }
 
     public function logout()

@@ -78,20 +78,6 @@ class ImageService
         return $filePath;
     }
 
-    public function getFreeImageFile($id)
-    {
-        $fileName = ImageFileInfoModel::where('id', $id)->value('name');
-        if (!isset($fileName)) {
-            throw new FileNotFoundException('FileInfo is not found');
-        }
-        $userId = ImageFileInfoModel::where('id', $id)->value('userId');
-        $filePath = storage_path("app/$userId/uploads/{$fileName}");
-        if (!file_exists($filePath)) {
-            throw new Exception('File is not found on the server');
-        }
-        return $filePath;
-    }
-
     public function getPreviewFile($id)
     {
         $fileName = ImageFileInfoModel::where('id', $id)->value('name');
@@ -181,7 +167,7 @@ class ImageService
         $imageInfoModel = new ImageInfoModel();
         $imageInfoModel->id = $fileInfo->id;
         $imageInfoModel->title = $fileInfo->name;
-        $imageInfoModel->thumbnailUrl = url("/api/preview-image/{$imageInfoModel->id}");
+        $imageInfoModel->thumbnailUrl = url("/api/previews/{$imageInfoModel->id}");
 
         return $imageInfoModel;
     }
@@ -280,7 +266,7 @@ class ImageService
         if ($fileInfo) {
             return $this->buildImageInfoModel($fileInfo);
         } else {
-            throw new FileNotFoundException('File is not found');
+            throw new FileNotFoundException('FileInfo is not found');
         }
     }
 
