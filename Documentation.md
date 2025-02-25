@@ -4,7 +4,7 @@
 
 ## Генерация проекта
 
-Основа для проекта была сгенерирована по файлу [OpenApi спецификации](https://tfs/tfs/CC_Collection/CustomersCanvas/_git/gist_ExternalStorage_BackendApp?path=%2Fsrc%2FAurigma.ExternalStorageApi.ApiClient%2FExternalStorageApi.OpenApi3.swagger.json) с использованием open-source генератора [open-api-generator](https://github.com/OpenAPITools/openapi-generator). Для генерации был выбран фреймворк Laravel.
+Основа для проекта была сгенерирована по файлу [OpenApi спецификации](https://tfs/tfs/CC_Collection/CustomersCanvas/_git/clients-AndaPresent-ExternalImageService-sample?path=%2Fapi-spec%2FExternalStorageApi.OpenApi3.swagger.json) с использованием open-source генератора [open-api-generator](https://github.com/OpenAPITools/openapi-generator). Для генерации был выбран фреймворк Laravel.
 
 Команда для генерации проекта:
 
