@@ -57,13 +57,6 @@ Route::get('/image-storage/v1/images/{id}', 'ImagesController@imagesGet');
  */
 Route::get('/image-storage/v1/images/{id}/content', 'ImagesController@imagesGetContent');
 /**
- * get imagesGetContentUrl
- * Summary: Returns an image content URL by ID.
- * Notes: 
- * Output-Formats: [text/plain, application/json, text/json]
- */
-Route::get('/image-storage/v1/images/{id}/content-url', 'ImagesController@imagesGetContentUrl');
-/**
  * get infoGetInfo
  * Summary: Returns external storage features.
  * Notes: 
@@ -75,15 +68,13 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/free-images/{id}/content', 'FreeImagesController@freeImagesGetContent');
-
 Route::get('/previews/{id}', 'PreviewsController@previewsGet');
 
 Route::group([
     'prefix' => 'auth'
 ], function () {
     Route::post('login', 'JWTAuthController@login');
-    Route::post('registration', 'JWTAuthController@registration');
+    Route::post('register', 'JWTAuthController@register');
     Route::post('logout', 'JWTAuthController@logout');
     Route::post('refresh', 'JWTAuthController@refresh');
 });

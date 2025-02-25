@@ -14,16 +14,20 @@ use SplFileObject;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\File;
 use Aurigma\DesignAtoms\Model\ImagePreviewFormat;
+use App\Services\PreviewSettingsService;
+use App\Models\PreviewSettingsModel;
 
 
 class ImageProcessingService
 {
-    private CcHubSettingsModel $settingsModel;
+    private CcHubSettingsModel $ccHubSettingsModel;
+    private PreviewSettingsModel $previewSettingsModel;
     private CcHubTokenService $tokenService;
         
-    public function __construct(CcHubSettingsService $settingsService, CcHubTokenService $tokenService)
+    public function __construct(CcHubSettingsService $ccHubSettingsService, PreviewSettingsService $previewSettingsService, CcHubTokenService $tokenService)
     {
-        $this->settingsModel = $settingsService->getSettings();
+        $this->ccHubSettingsModel = $ccHubSettingsService->getSettings();
+        $this->previewSettingsModel = $previewSettingsService->getSettings();
         $this->tokenService = $tokenService;
     }
 
@@ -33,7 +37,7 @@ class ImageProcessingService
         $splFile = $this->convertUploadedFileToSpl($userId, $file);
         $response = $designAtomsServiceApi->designAtomsImagesRenderImagePreviewFromFile(
             $attachment = null, $tenantId = null, $source_file = $splFile, $mockup_owner_id = null, 
-            $mockup_id = null, $width = 150, $height = 150, ImagePreviewFormat::PNG, $fit_mode = null);
+            $mockup_id = null, $width = $this->previewSettingsModel->width, $height = $this->previewSettingsModel->height, ImagePreviewFormat::PNG, $fit_mode = null);
         $previewFileName = $this->savePreview($userId, $response, $name);
 
         return $previewFileName;
@@ -65,7 +69,7 @@ class ImageProcessingService
 
     private function getDesignAtomsImageApi()
     {
-        $apiUrl = rtrim($this->settingsModel->apiUrl, "/");
+        $apiUrl = rtrim($this->ccHubSettingsModel->apiUrl, "/");
 
         $client = new Client([
             // Base URI is used with relative requests

@@ -17,8 +17,6 @@ class ImageStorageFeature
 
     const ALLOW_DELETE = 'AllowDelete';
 
-    const ALLOW_GET_CONTENT_URL = 'AllowGetContentUrl';
-
     const ALLOW_SEARCH = 'AllowSearch';
 
     /**
@@ -30,7 +28,6 @@ class ImageStorageFeature
         return [
             self::ALLOW_CREATE,
             self::ALLOW_DELETE,
-            self::ALLOW_GET_CONTENT_URL,
             self::ALLOW_SEARCH
         ];
     }

@@ -50,7 +50,6 @@ class InfoController extends Controller
         $imageStorageInfoModel->features = [
             ImageStorageFeature::ALLOW_CREATE,
             ImageStorageFeature::ALLOW_DELETE,
-            ImageStorageFeature::ALLOW_GET_CONTENT_URL,
             ImageStorageFeature::ALLOW_SEARCH
         ];
 
