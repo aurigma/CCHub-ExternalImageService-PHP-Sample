@@ -4,7 +4,7 @@
 
 ## Project Generation
 
-The project was generated from the [External Storage Api specification file](https://tfs/tfs/CC_Collection/CustomersCanvas/_git/clients-AndaPresent-ExternalImageService-sample?path=%2Fapi-spec%2FExternalStorageApi.OpenApi3.swagger.json) using the open-source generator [open-api-generator](https://github.com/OpenAPITools/openapi-generator). The Laravel framework was chosen for generation.
+The project was generated from the [External Storage Api specification file](https://github.com/aurigma/CCHub-ExternalImageService-PHP-Sample/blob/master/api-spec/ExternalStorageApi.OpenApi3.swagger.json) using the open-source generator [open-api-generator](https://github.com/OpenAPITools/openapi-generator). The Laravel framework was chosen for generation.
 
 To generate the project, use the following command:
 
