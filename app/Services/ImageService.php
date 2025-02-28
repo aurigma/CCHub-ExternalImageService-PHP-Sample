@@ -215,6 +215,8 @@ class ImageService
         }
         $result = $query->get();
 
+        $fileInfos = [];
+
         for ($i = 0; $i < count($result); $i++)
         {
             $fileInfos[] = $this->buildImageInfoModel($result[$i]);
