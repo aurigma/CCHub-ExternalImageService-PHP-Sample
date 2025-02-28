@@ -131,4 +131,4 @@ Authorization: Bearer <your_token>
 
 # Run Docker-compose
 
-Before running docker-compose, enter your parameters in CC_HUB_API_URL, CC_HUB_CLIENT_IID, CC_HUB_CLIENT_SSECRET in the docker-compose.yml file.
+Before running docker-compose, enter your parameters in CC_HUB_API_URL, CC_HUB_CLIENT_ID, CC_HUB_CLIENT_SECRET in the docker-compose.yml file.
