@@ -1,0 +1,16 @@
+.env
+
+vendor
+
+bootstrap/cache/*
+storage/*.log
+storage/debugbar/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+storage/logs/*
+
+.gitignore
+
+docker-compose.yml

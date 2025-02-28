@@ -1,8 +1,10 @@
+[[_TOC_]]
+
 # External Image Server Php Sample
 Software for demonstration of work with user's photos and obtaining preliminary images.
 
 
-# Installation process 
+## Installation process 
 To set up this project, ensure you have the following installed:
 
 PHP 7.4
@@ -20,12 +22,7 @@ extension=openssl
 extension=pdo_mysql
 ```
 
-Additionally, for Windows systems, download the cacert.pem certificate from this link: https://curl.se/docs/caextract.html and specify its path in the php.ini file:
-
-curl.cainfo = ‘C:/<YOUR_PATH>/cacert.pem’.
-
-
-# Software dependencies
+## Software dependencies
 
 Install project dependencies using Composer:
 
@@ -34,7 +31,7 @@ composer install
 ```
 
 
-# Environment Configuration
+## Environment Configuration
 
 Create the .env file by running:
 
@@ -51,7 +48,7 @@ CC_HUB_CLIENT_SECRET=<YOUR_CLIENT_SECRET_FROM_CCHUB>
 ```
 
 
-# Generating the JWT Secret
+## Generating the JWT Secret
 
 Run the following command to generate the JWT secret key:
 
@@ -62,7 +59,7 @@ php artisan jwt:secret
 By default, the token remains active for 60 minutes. You can modify this duration by changing the JWT_TTL parameter in the .env file.
 
 
-# Database Setup
+## Database Setup
 
 To connect to your database, update the .env file with your database credentials:
 
@@ -77,12 +74,14 @@ DB_PASSWORD=<YOUR_PASSWORD>
 
 Then, run the following command to migrate the database:
 
+```
 php artisan migrate
+```
 
 After a successful migration, your database should contain tables including users and file_infos, which store user data and file information.
 
 
-# Running the Application
+## Running the Application
 
 To start the project, use the following command:
 
@@ -97,7 +96,7 @@ To test the API endpoints, refer to the route definitions in routes/api.php and 
 http://localhost:8000/api
 
 
-# Authentication & Token Management
+## Authentication & Token Management
 
 Register a New User
 To register a new user, send a POST request to:
@@ -129,3 +128,7 @@ All attributes should be sent as text.
 After a successful login, the response will contain a JWT token, which should be included in the Authorization header for subsequent API requests:
 
 Authorization: Bearer <your_token>
+
+# Run Docker-compose
+
+Before running docker-compose, enter your parameters in CC_HUB_API_URL, CC_HUB_CLIENT_IID, CC_HUB_CLIENT_SSECRET in the docker-compose.yml file.

@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: laravel_app
+    volumes:
+      - laravel_storage:/var/www/storage
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: laravel
+      DB_USERNAME: user
+      DB_PASSWORD: password
+      CC_HUB_API_URL: <YOUR_API_URL_FROM_CCHUB>
+      CC_HUB_CLIENT_IID: <YOUR_CLIENT_ID_FROM_CCHUB>
+      CC_HUB_CLIENT_SSECRET: <YOUR_CLIENT_SECRET_FROM_CCHUB>
+    depends_on:
+      - db
+    networks:
+      - internet
+    ports:
+      - "8000:8000"
+
+  db:
+    image: mysql:8
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - my-datavolume:/var/lib/mysql
+    networks:
+      - internet
+    ports:
+      - "3306:3306"
+
+volumes:
+  laravel_storage:
+  my-datavolume:
+
+networks:
+  internet:
+    name: internet
+    driver: bridge
