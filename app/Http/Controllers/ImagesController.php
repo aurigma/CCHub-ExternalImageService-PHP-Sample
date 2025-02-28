@@ -61,7 +61,7 @@ class ImagesController extends Controller
             $skip = (int) $skip;
             $result = $this->imageService->getAll($search, $take, $skip);
 
-            return response()->json([$result], 200);
+            return response()->json($result, 200);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         } catch (\Exception $e) {
@@ -97,7 +97,7 @@ class ImagesController extends Controller
             $this->validateId($id);
             $result = $this->imageService->get($id);
 
-            return response()->json([$result], 200);
+            return response()->json($result, 200);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         } catch (FileNotFoundException $e) {

@@ -76,6 +76,7 @@ class ImageProcessingService
             'base_uri' => $apiUrl,
             // You can set any number of default request options.
             'timeout'  => 60.0,
+            'defaults' => array('verify' => false,),
         ]);
         $selector = new HeaderSelector();
         $config = new Configuration();

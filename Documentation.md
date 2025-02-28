@@ -1,386 +1,83 @@
-# Описание проекта External Image Server Php Sample
+# External Image Server PHP Sample Project Description
 
 [[_TOC_]]
 
-## Генерация проекта
+## Project Generation
 
-Основа для проекта была сгенерирована по файлу [OpenApi спецификации](https://tfs/tfs/CC_Collection/CustomersCanvas/_git/clients-AndaPresent-ExternalImageService-sample?path=%2Fapi-spec%2FExternalStorageApi.OpenApi3.swagger.json) с использованием open-source генератора [open-api-generator](https://github.com/OpenAPITools/openapi-generator). Для генерации был выбран фреймворк Laravel.
+The project was generated from the [External Storage Api specification file](https://tfs/tfs/CC_Collection/CustomersCanvas/_git/clients-AndaPresent-ExternalImageService-sample?path=%2Fapi-spec%2FExternalStorageApi.OpenApi3.swagger.json) using the open-source generator [open-api-generator](https://github.com/OpenAPITools/openapi-generator). The Laravel framework was chosen for generation.
 
-Команда для генерации проекта:
+To generate the project, use the following command:
 
+```sh
+openapi-generator-cli generate -i <path_to_your_file> -g php-laravel -o <folder_name>
 ```
-openapi-generator-cli generate -i <ваш путь до файла> -g php-laravel -o .<название папки, куда вы хотите положить проект>
-```
 
-В файле "routes/api.php" после генерации во всех путях была лишняя секция "/api", в ссылках происходило дублирование этой части, из-за чего "/api" было убрано во всех путях.
+After generation, the `routes/api.php` file contained an extra `/api` segment in all paths, causing its duplication in the links. This segment was removed to correct the paths:
 
-Как было: http://localhost:8000/api/api/...
+Before: `http://localhost:8000/api/api/...`
 
-Как стало: http://localhost:8000/api/...
+After: `http://localhost:8000/api/...`
 
+## Working with the API
 
-## Как работать с API
+The specification includes descriptions of six endpoints. The following details of each endpoint include:
 
-Спецификация включает в себя описание 6 эндпоинтов. Ниже представлено описание каждого, содержащее следующее:
+- Purpose
+- Security
+- Path
+- Request body and query parameters
+- Response format and model
+- Possible response codes
 
-* назначение
-* защищенность
-* путь
-* описание тела запроса/query-параметров
-* формат и модель возвращаемого ответа
-* возможные коды ответов
+### *Info* Controller
 
-### Контроллер *Info*
+#### Method: `infoGetInfo()`
 
-#### Метод infoGetInfo()
+Retrieves the current server version and information about implemented API functions.
 
-Получение текущей версии сервера, а так же информации о реализованных функциях API
+- **URL**: `GET /api/image-storage/v1/info`
+- **Authorization**: None
+- **Body**: None
+- **Query Parameters**: None
+- **Responses**:
 
-- URL: 'GET /api/image-storage/v1/info'
-- Авторизация: нет
-- Тело: нет
-- Query-параметры: нет
-- Ответы:
-    - 200 - успешная операция
-    ```
-    {
-        "name": "Image source",
-        "version": "0.0.1",
-        "features": [
-            "AllowCreate",
-            "AllowDelete",
-            "AllowSearch"
-        ]
-    }
-    ```
-
-Параметр "features" передает информацию о реализованных функциях сервиса.
-
-### Контроллер *Images*
-
-#### Метод imagesCreate()
-
-Добавление файла пользователя в хранилище файлов и создание записи в базе данных о файле пользователя, также создание превью файла и его сохранение в хранилище.
-
-- URL: 'POST /api/image-storage/v1/images'
-- Авторизация: Brearer token (JWT)
-- Тело (multipart/form-data)
-```
-file = бинанрный файл
-solveConflictStrategy = Overwrite | Rename | Abort | Skip
-```
-- Query-параметры: нет
-- Ответы:
-    - 201 - успешное создание
-    ```
-    {
-        "id": "Guid",
-        "title": "File Name",
-        "thumbnailUrl": "http://localhost:8000/api/previews/someGuidPreview"
-    }
-    ```
-    - 400 - проблемы с параметрами запроса
-    ```
-    {
-        "message": "No file uploaded" | "message": "No strategy provided"
-    }
-    ```
-    - 401 - проблемы с авторизацией
-    ```
-    {
-        "message": "Unauthenticated."
-    }
-    ```
-    - 409 - обнаружен конфликт, стратегия не описана или Abort
-    ```
-    {
-        "message": "No strategy provided" | "message": "File already exists"
-    }
-    ```
-
-#### Метод imagesGetAll()
-
-Получение всех записей файлов пользователя с учетом фильтрации по вхождению строки в имя файла и пагинации
-
-- URL: 'GET /api/image-storage/v1/images'
-- Авторизация: Brearer token (JWT)
-- Тело: нет
-- Query-параметры:
-```
-search: <текст>
-take: <число>
-skip: <число>
-```
-- Ответы:
-    - 200 - успешная операция
-    ```
-    [
+    - `200` - Successful operation
+    
+        ```json
         {
-            "id": "Guid1",
-            "title": "File Name 1",
-            "thumbnailUrl": "http://localhost:8000/api/previews/someGuidPreview1"
+            "name": "Image source",
+            "version": "0.0.1",
+            "features": [
+                "AllowCreate",
+                "AllowDelete",
+                "AllowSearch"
+            ]
         }
-        {
-            "id": "Guid2",
-            "title": "File Name 2",
-            "thumbnailUrl": "http://localhost:8000/api/previews/someGuidPreview2"
-        }
-    ]
-    ```
-    - 400 - проблемы с параметрами запроса
-    ```
-    {
-        "message": "Incorrect data"
-    }
-    ```
-    - 401 - проблемы с авторизацией
-    ```
-    {
-        "message": "Unauthenticated."
-    }
-    ```
-
-#### Метод imagesDelete(someId)
-
-Удаление файла пользователя и его превью из хранилища, также удаление записи о файле из базы данных
-
-- URL: 'DELETE /api/image-storage/v1/images/{someId}'
-- Авторизация: Brearer token (JWT)
-- Тело: нет
-- Query-параметры: нет
-- Ответы:
-    - 200 - успешная операция, файл удален
-    - 400 - проблемы с параметрами запроса, неправильный id
-    ```
-    {
-        "message": "Invalid ID format"
-    }
-    ```
-    - 401 - проблемы с авторизацией
-    ```
-    {
-        "message": "Unauthenticated."
-    }
-    ```
-    - 404 - проблема с поиском ресурса, отсутствие информации о файле в базе данных
-    ```
-    {
-        "message": "FileInfo is not found."
-    }
-    ```
-
-#### Метод imagesGet(someId)
-
-Получение информации о файле пользователя из базы данных и ссылки на превью файла
-
-- URL: 'GET /api/image-storage/v1/images/{someId}'
-- Авторизация: Brearer token (JWT)
-- Тело: нет
-- Query-параметры: нет
-- Ответы:
-    - 200 - успешная операция, файл найден
-    ```
-    {
-        "id": "Guid",
-        "title": "File Name",
-        "thumbnailUrl": "http://localhost:8000/api/previews/someGuidPreview"
-    }
-    ```
-    - 400 - проблемы с параметрами запроса, неправильный id
-    ```
-    {
-        "message": "Invalid ID format"
-    }
-    ```
-    - 401 - проблемы с авторизацией
-    ```
-    {
-        "message": "Unauthenticated."
-    }
-    ```
-    - 404 - проблема с поиском ресурса, отсутствие информации о файле в базе данных
-    ```
-    {
-        "message": "FileInfo is not found."
-    }
-    ```
-
-#### Метод imagesGetContent(someId)
-
-Получение файла пользователя по id
-
-- URL: 'GET /api/image-storage/v1/images/{someId}/content'
-- Авторизация: Brearer token (JWT)
-- Тело: нет
-- Query-параметры: нет
-- Ответы:
-    - 200 - успешная операция, файл найден, в ответе файловый поток
-    - 400 - проблемы с параметрами запроса, неправильный id
-    ```
-    {
-        "message": "Invalid ID format"
-    }
-    ```
-    - 401 - проблемы с авторизацией
-    ```
-    {
-        "message": "Unauthenticated."
-    }
-    ```
-    - 404 - проблема с поиском ресурса, отсутствие информации о файле в базе данных
-    ```
-    {
-        "message": "FileInfo is not found."
-    }
-    ```
-
-#### Общие принципы:
-
-* В параметрах Headers всех этих эндпоинтов должны быть следующие значения:
-
-    * Accept = aplication/json
-    * Authorization = Bearer <someToken>
-
-* POST-запрос сохраняет файл в системе, где создается модель, описывающая файл - ID, имя файла и ссылка на превью, и, как и в GET-запросе, возвращается назад.
-* Если в POST-запросе пользователь будет пытаться загружать файл с именем, которое уже есть у другого файла сохраненного в системе, то произойдет конфликт, который решается с использованием стратегий. Подробнее о стратегиях в теле POST-запроса описано в пункте [Стратегии при конфликте имен загружаемых файлов](#стратегии-при-конфликте-имен-загружаемых-файлов)
-* Для получения (или удаления) файла необходимо указать ID этого файла из базы данных в пути запроса.
-* ID файла имеет формат GUID.
-* В title отображается название файла вместе с его расширением.
-* В thumbnail отображается ссылка на превью файла клиента, создается превью в момент, когда клиент отправляет файл в POST-запросе, после чего собирается ссылка на превью. Размеры превью можно задать в файле .env в параметрах PREVIEW_WIDTH, PREVIEW_HEIGHT.
-* GET-запрос на получение контента возвращает файловый поток.
-
-Помимо эндпоинтов описанных в спецификации в проект были добавлены ещё 4 дополнительных:
-
-### Контроллер *Previews*
-
-#### Метод previewsGet(someId)
-
-Получение превью картинки
-
-- URL: 'GET /api/previews/{someId}'
-- Авторизация: нет
-- Тело: нет
-- Query-параметры: нет
-- Ответы:
-    - 200 - успешная операция, превью файла найдено, в ответе файловый поток превью
-    - 400 - проблемы с параметрами запроса, неправильный id
-    ```
-    {
-        "message": "Invalid ID format"
-    }
-    ```
-    - 404 - проблема с поиском ресурса, отсутствие информации о файле в базе данных
-    ```
-    {
-        "message": "FileInfo is not found."
-    }
-    ```
-
-### Контроллер *JWTAuth*
-
-#### Метод register()
-
-Регистрация пользователя
-
-- URL: 'POST /api/auth/register'
-- Авторизация: нет
-- Тело (multipart/form-data)
-```
-name = <your_value>
-email = <your_value> (должно быть уникально)
-password = <your_value>
-```
-- Query-параметры: нет
-- Ответы:
-    - 200 - успешная операция, пользователь зарегистрирован
-    ```
-    {
-        "message": "Successful registration!"
-    }
-    ```
-
-#### Метод login()
-
-Авторизация пользователя
-
-- URL: 'POST /api/auth/login'
-- Авторизация: нет
-- Тело (multipart/form-data)
-```
-email = <your_value>
-password = <your_value>
-```
-- Query-параметры: нет
-- Ответы:
-    - 200 - успешная операция, пользователь авторизовался
-    ```
-    {
-        "access_token": "<Token>",
-        "token_type": "bearer",
-        "expires_in": <Время, когда токен истечет, в формате Unix timestamp>
-    }
-    ```
-    - 401 - не успешная авторизация
-    ```
-    {
-        "error": "Unauthorized"
-    }
-    ```
-
-#### Метод logout()
-
-Прекращение сеанса работы авторизованного пользователя
-
-- URL: 'POST /api/auth/logout'
-- Авторизация: Brearer token (JWT)
-- Тело: нет
-- Query-параметры: нет
-- Ответы:
-    - 200 - успешная операция, пользователь закончил сессию
-    ```
-    {
-        "message": "Successfully logged out"
-    }
-    ```
-    - 401 - проблема авторизации
-    ```
-    {
-        "error": "Unauthorized"
-    }
-    ```
-
-#### Принципы авторизации/регистрации:
-
-* После прекращения сеанса работы авторизованного пользователя токен становится недействительным. Чтобы прекратить сеанс, вызовите эндпоинт logout и передайте в заголовок Authorization токен сессии, которую нужно прекратить.
-* После истечения времени жизни токена (60 минут), он становится недействительным, время жизни токена можно поменять в файле ".env" в параметре "JWT_TTL".
-* При регистрации нужно заполнять поля "name", "email" (уникальными значениями), "password".
-* Чтобы зайти за пользователя, достаточно ввести ранее введенные значения параметров "email" и "password". После автоизации пользователь получает токен, в котором хранится информация о пользователе, его id.
-
-
-## Использование JWT
-
-Для работы с токенами используется пакет:
-```
-tymon/jwt-auth: ^1.0.
-```
-
-При регистрации данные пользователя записываются в таблицу "users", в качестве уникального значения используется "email" пользователя.
-После авторизации пользователь получает токен, который используется при обращении к защищенным эндпоинтам. Из токена извлекается "id" пользователя в сервисе *AuthService*, который передаётся в основной сервис *ImageService*. Там "id" используется для:
-
-* Названия папки пользователя
-* Записи в базу данных информации о файлах
-* Поиска информации о файлах по "id" пользователя
-* Отдельного хранения данных пользователей
-
-## Логика работы с файлами
-
-* Загрузка файла:
-    * Имя файла и расширение сохраняются в БД, а так же используются при сохранении во внутренней папке пользователя на сервере
-    * Далее идет проверка на наличие информации о данном файле пользователя в базе данных
-        * Если запись нашлась, то, в зависимости от того, какая стратегия указана, осуществляется решение конфликта. Подробнее о решении конфликтов можно прочесть ниже в подразделе [Стратегии при конфликте имен загружаемых файлов](#стратегии-при-конфликте-имен-загружаемых-файлов)
-        * Если запись не нашлась, то файл сохраняется в папке пользователя, сохраняется информация об этом файле, создается и сохраняется превью файла
-    * В качестве ответа составляется модель *ImageInfoModel* следующего вида:
         ```
+
+The `features` parameter provides information about the implemented functions of the service.
+
+### *Images* Controller
+
+#### Method: `imagesCreate()`
+
+Adds a user's file to the file storage, creates a database record for the user's file, and generates a preview file, saving it to the storage.
+
+- **URL**: `POST /api/image-storage/v1/images`
+- **Authorization**: Bearer token (JWT)
+- **Body** (multipart/form-data):
+
+  ```
+  file = binary file
+  solveConflictStrategy = Overwrite | Rename | Abort | Skip
+  ```
+
+- **Query Parameters**: None
+- **Responses**:
+
+    - `201` - Successful creation
+
+        ```json
         {
             "id": "Guid",
             "title": "File Name",
@@ -388,87 +85,445 @@ tymon/jwt-auth: ^1.0.
         }
         ```
 
-* Получение списка с информацией о файлах с учетом фильтрации и пагинации:
-    * В качестве параметров запроса принимаются: search (ищет совпадающие полные названия файлов), take (ограничивает количество записей, по умолчанию 10), skip (пропускает указанное количество записей)
-    * Далее строится запрос в базу данных, с учетом "id" пользователя
-    Список результата проходит через составление модели *ImageInfoModel* и возвращается пользователю
+    - `400` - Issues with request parameters
 
-* Удаление файла и записи о нем:
-    * По "id" файла и пользователя ищется название файла
-    * Строится путь до файла и до превью файла
-    * Удаляются файл и его превью
-    * Удаляется запись о файле
+        ```json
+        {
+            "message": "No file uploaded" | "message": "No strategy provided"
+        }
+        ```
 
-* Получение информации об одном файле:
-    * По "id" файла и пользователя ищется название файла
-    * Строится путь до файла
-    * Составляется модель *ImageInfoModel* для ответа пользователю
+    - `401` - Authorization issues
 
-* Получение файла (отображение картинки):
-    * По "id" файла и пользователя ищется название файла
-    * Строится путь до файла
-    * Возвращается файл
+        ```json
+        {
+            "message": "Unauthenticated."
+        }
+        ```
 
-Описание ошибок
+    - `409` - Conflict detected, strategy not specified or Abort
 
-* *FileNotFoundException* - отсутствие записи о файле в базе данных
-* *Exception* - отсутствие файла в хранилище, ошибка удаления файла, ошибка работы сервера
-* *ConflictException* - в случае конфликта имен файлов
-* *InvalidArgumentException* - в случае некорректного запроса, отсутствие файла и стратегии при загрузке, в случае некорректных данных в параметрах "take" и "skip" (вносить нужно числовые значения, они передаются строкой, но потом идет проверка на возможность изменения типа данных)
+        ```json
+        {
+            "message": "No strategy provided" | "message": "File already exists"
+        }
+        ```
 
-## Логика работы с превью
+#### Method: `imagesGetAll()`
 
-Для создания превью используется API системы Customer's Canvas, подробнее как работать с системой Customer's Canvas описано [тут](#авторизация-в-customers-canvas).
+Retrieves all user file records with filtering by string match in the file name and applying pagination.
 
-Для работы с системой Customer's Canvas и создания превью были использованы следующие пакеты:
+- **URL**: `GET /api/image-storage/v1/images`
+- **Authorization**: Bearer token (JWT)
+- **Body**: None
+- **Query Parameters**:
+
+  ```
+  search: <text>
+  take: <number>
+  skip: <number>
+  ```
+
+- **Responses**:
+    - `200` - Successful operation
+    
+        ```json
+        [
+            {
+                "id": "Guid1",
+                "title": "File Name 1",
+                "thumbnailUrl": "http://localhost:8000/api/previews/someGuidPreview1"
+            },
+            {
+                "id": "Guid2",
+                "title": "File Name 2",
+                "thumbnailUrl": "http://localhost:8000/api/previews/someGuidPreview2"
+            }
+        ]
+        ```
+
+    - `400` - Issues with request parameters
+
+        ```json
+        {
+            "message": "Incorrect data"
+        }
+        ```
+
+    - `401` - Authorization issues
+
+        ```json
+        {
+            "message": "Unauthenticated"
+        }
+        ```
+
+#### Method: `imagesDelete(someId)`
+
+Deletes a user's file and its preview from the storage and removes the file record from the database.
+
+- **URL**: `DELETE /api/image-storage/v1/images/{someId}`
+- **Authorization**: Bearer token (JWT)
+- **Body**: None
+- **Query Parameters**: None
+- **Responses**:
+
+    - `200` - Successful operation, file deleted
+    - `400` - Issues with request parameters, invalid ID
+
+        ```json
+        {
+            "message": "Invalid ID format"
+        }
+        ```
+
+    - `401` - Authorization issues
+
+        ```json
+        {
+            "message": "Unauthenticated."
+        }
+        ```
+
+    - `404` - Resource not found, no file information in the database
+
+        ```json
+        {
+            "message": "FileInfo is not found."
+        }
+        ```
+
+#### Method: `imagesGet(someId)`
+
+Retrieves information about a user's file from the database and a link to a preview file.
+
+- **URL**: `GET /api/image-storage/v1/images/{someId}`
+- **Authorization**: Bearer token (JWT)
+- **Body**: None
+- **Query Parameters**: None
+- **Responses**:
+
+    - `200` - Successful operation, file found
+
+        ```json
+        {
+            "id": "Guid",
+            "title": "File Name",
+            "thumbnailUrl": "http://localhost:8000/api/previews/someGuidPreview"
+        }
+        ```
+
+    - `400` - Issues with request parameters, invalid ID
+
+        ```json
+        {
+            "message": "Invalid ID format"
+        }
+        ```
+
+    - `401` - Authorization issues
+
+        ```json
+        {
+            "message": "Unauthenticated."
+        }
+        ```
+
+    - `404` - Resource not found, no file information in the database
+
+        ```json
+        {
+            "message": "FileInfo is not found."
+        }
+        ```
+
+#### Method: `imagesGetContent(someId)`
+
+Retrieves a user's file by ID.
+
+- **URL**: `GET /api/image-storage/v1/images/{someId}/content`
+- **Authorization**: Bearer token (JWT)
+- **Body**: None
+- **Query Parameters**: None
+- **Responses**:
+
+    - `200` - Successful operation, file found, returns file stream
+    - `400` - Issues with request parameters, invalid ID
+
+        ```json
+        {
+            "message": "Invalid ID format"
+        }
+        ```
+
+    - `401` - Authorization issues
+
+        ```json
+        {
+            "message": "Unauthenticated."
+        }
+        ```
+
+    - `404` - Resource not found, no file information in the database
+
+        ```json
+        {
+            "message": "FileInfo is not found."
+        }
+        ```
+
+#### General Principles:
+
+- The `Headers` for all these endpoints should include:
+    - `Accept = application/json`
+    - `Authorization = Bearer <someToken>`
+- A `POST` request saves the file in the system, creating a model that describes the file - ID, file name, and preview link. This model is returned in the response.
+- If a `POST` request attempts to upload a file with a name that already exists in the system, a conflict will occur. This conflict is resolved using strategies. For more details about the strategies, refer to the section [Strategies for Handling Name Conflicts of Uploaded Files](#strategies-for-handling-name-conflicts-of-uploaded-files).
+- To retrieve (or delete) a file, specify the file ID from the database in the request path.
+- The file ID is in GUID format.
+- The `title` displays the file name with its extension.
+- The `thumbnail` displays the link to the client's preview file, created when the client sends the file in a `POST` request. The preview dimensions can be set in the `.env` file using the parameters `PREVIEW_WIDTH` and `PREVIEW_HEIGHT`.
+- A `GET` request to retrieve content returns a file stream.
+
+In addition to the endpoints described in the specification, the project includes four additional endpoints.
+
+### *Previews* Controller
+
+#### Method: `previewsGet(someId)`
+
+Retrieves a preview image.
+
+- **URL**: `GET /api/previews/{someId}`
+- **Authorization**: None
+- **Body**: None
+- **Query Parameters**: None
+- **Responses**:
+
+    - `200` - Successful operation, preview file found, returns preview file stream
+    - `400` - Issues with request parameters, invalid ID
+
+        ```json
+        {
+            "message": "Invalid ID format"
+        }
+        ```
+
+    - `404` - Resource not found, no file information in the database
+
+        ```json
+        {
+            "message": "FileInfo is not found"
+        }
+        ```
+
+### *JWTAuth* Controller
+
+#### Method: `register()`
+
+Registers a new user.
+
+- **URL**: `POST /api/auth/register`
+- **Authorization**: None
+- **Body** (multipart/form-data):
+
+  ```
+  name = <your_value>
+  email = <your_value> (must be unique)
+  password = <your_value>
+  ```
+
+- **Query Parameters**: None
+- **Responses**:
+
+    - `200` - Successful operation, user registered
+
+        ```json
+        {
+            "message": "Successful registration!"
+        }
+        ```
+
+#### Method: `login()`
+
+Authenticates a user.
+
+- **URL**: `POST /api/auth/login`
+- **Authorization**: None
+- **Body** (multipart/form-data):
+
+  ```
+  email = <your_value>
+  password = <your_value>
+  ```
+
+- **Query Parameters**: None
+- **Responses**:
+
+    - `200` - Successful operation, user authenticated
+
+        ```json
+        {
+            "access_token": "<Token>",
+            "token_type": "bearer",
+            "expires_in": <Unix timestamp of token expiration>
+        }
+        ```
+
+    - `401` - Authentication failed
+
+        ```json
+        {
+            "error": "Unauthorized"
+        }
+        ```
+
+#### Method: `logout()`
+
+Ends the session of an authenticated user.
+
+- **URL**: `POST /api/auth/logout`
+- **Authorization**: Bearer token (JWT)
+- **Body**: None
+- **Query Parameters**: None
+- **Responses**:
+
+    - `200` - Successful operation, user session ended
+
+        ```json
+        {
+            "message": "Successfully logged out"
+        }
+        ```
+
+    - `401` - Authorization issues
+    
+        ```json
+        {
+            "error": "Unauthorized"
+        }
+        ```
+
+#### Authentication and Registration Principles
+
+- After ending the session of an authenticated user, the token becomes invalid. To end the session, call the `logout` endpoint and pass the session token in the `Authorization` header.
+- The token becomes invalid after its expiration time (60 minutes). The token's expiration time can be changed in the `.env` file using the parameter `JWT_TTL`.
+- During registration, fill in the fields `name`, `email` (unique values), and `password`.
+- To log in, enter the previously provided values for `email` and `password`. After authentication, the user receives a token containing user information, including the user ID.
+
+## Using JWT
+
+For token management, the following package is used:
+
+```
+tymon/jwt-auth: ^1.0
+```
+
+During registration, user data is stored in the `users` table, with the user's `email` serving as a unique identifier. After authentication, the user receives a token used to access protected endpoints. The `AuthService` extracts the user `id` from the token, which is then passed to the main `ImageService`. The `id` is used for:
+
+- Naming the user's folder
+- Recording file information in the database
+- Searching for file information by user `id`
+- Storing user data separately
+
+## File Handling Logic
+
+* **File Upload**:
+
+    * The file name and extension are saved in the database and used when saving to the user's internal folder on the server.
+    * The system checks for existing file information in the database:
+
+        * If a record is found, the conflict resolution strategy is applied. More details on conflict resolution can be found in the section [Strategies for Handling Name Conflicts of Uploaded Files](#strategies-for-handling-name-conflicts-of-uploaded-files).
+        * If no record is found, the file is saved in the user's folder, and information about the file, including the preview, is recorded.
+
+    * The response model `ImageInfoModel` is structured as follows:
+    
+        ```json
+        {
+            "id": "Guid",
+            "title": "File Name",
+            "thumbnailUrl": "http://localhost:8000/api/previews/someGuidPreview"
+        }
+        ```
+
+* **Retrieving a List of File Information with Filtering and Pagination**:
+
+  * Request parameters include `search` (matches full file names), `take` (limits the number of records, default is 10), and `skip` (skips the specified number of records).
+  * A database query is constructed based on the user `id`.
+  * The resulting list is formatted using the `ImageInfoModel` and returned to the user.
+
+* **Deleting a File and Its Record**:
+
+  * The file name is searched by `id` and user.
+  * The paths to the file and its preview are constructed.
+  * The file and its preview are deleted.
+  * The file record is removed from the database.
+
+* **Retrieving Information About a Single File**:
+
+  * The file name is searched by `id` and user.
+  * The path to the file is constructed.
+  * The response model `ImageInfoModel` is formatted and returned to the user.
+
+* **Retrieving a File (Displaying an Image)**:
+
+  * The file name is searched by `id` and user.
+  * The path to the file is constructed.
+  * The file is returned.
+
+## Error Descriptions
+
+* `FileNotFoundException` - No file record found in the database.
+* `Exception` - File not found in storage, file deletion error, server error.
+* `ConflictException` - File name conflict.
+* `InvalidArgumentException` - Incorrect request, missing file or strategy during upload, invalid data in `take` and `skip` parameters (numeric values expected, provided as strings but type-checked later).
+
+## Preview Logic
+
+Previews are created using the Customer's Canvas API. Detailed instructions on working with Customer's Canvas can be found [here](#authorization-in-customers-canvas).
+
+The following packages are used to work with Customer's Canvas and create previews:
+
 ```
 aurigma/php-design-atoms-client: ^2.1
 aurigma/php-storefront-client: 2.0.1
 ```
 
-* При загрузке файла (эндпоинт сохранения файла в систему):
+* **File Upload (Endpoint for Saving Files)**:
 
-    * Для доступа к сервису *DesignAtomsApi* создается объект класса *DesignAtomsImagesApi*, для использования функции, преобразующей файл в превью
-    * Файл из типа *UploadedFile* меняется на тип *SplFileObject*
-    * Создается превью-файл с использованием функции класса *DesignAtomsImagesApi* и в качестве одного из агрументов отправляется файл типа *SplFileObject*, преобразованный ранее
-    * Превью сохраняется в папке пользователя "storage/app/someUserId/preview"
-    
-* При удалении файла:
+  * An object of the `DesignAtomsImagesApi` class is created to access the `DesignAtomsApi` service and use the function that converts the file into a preview.
+  * The file is converted from `UploadedFile` to `SplFileObject`.
+  * A preview file is created using the `DesignAtomsImagesApi` class function, with the converted file as one of the arguments.
+  * The preview is saved in the user's folder `storage/app/someUserId/preview`.
 
-    * По названию файла проивходит поиск превью
-    * Удаляется превью
+* **File Deletion**:
 
-* Получение превью файла по эндпоинту со свободным доступом:
-    
-    * Переход по ссылке "http://localhost:8000/api/previews/{someGuidPreview}"
-    * По "id" файла ищется название файла
-    * Строится путь до файла (для проверки наличия файла)
-    * Строится путь до первью
-    * Возвращается превью
+  * The preview is searched by file name.
+  * The preview is deleted.
 
+* **Retrieving a Preview File via a Public Endpoint**:
 
-## Стратегии при конфликте имен загружаемых файлов
+  * Access the link `http://localhost:8000/api/previews/{someGuidPreview}`.
+  * The file name is searched by `id`.
+  * The path to the file is constructed (for existence check).
+  * The path to the preview is constructed.
+  * The preview is returned.
 
-В API реализованы стратегии загрузки файлов, предотвращающие конфликты имён файлов:
+## Strategies for Handling Name Conflicts of Uploaded Files
 
-* Overwrite – перезаписывает файл, если такой уже существует. Старый файл удаляется, создаётся новый с тем же именем, обновляется превью и timestamp записи в БД.
+This API implements strategies to handle file name conflicts during uploads:
 
-* Rename – загружает файл под новым именем, если файл с таким именем уже существует. Создаётся новая запись в БД и генерируется новое превью.
+* **Overwrite** – Overwrites the file if it already exists. The old file is deleted, a new file with the same name is created, and the preview and timestamp in the database are updated.
+* **Rename** – Uploads the file with a new name if a file with the same name already exists. A new record is created in the database, and a new preview is generated.
+* **Abort** – Stops the upload if a file with the same name already exists. Returns an error.
+* **Skip** – Does not upload the file if it already exists. Returns information about the existing file.
 
-* Abort – останавливает загрузку, если файл с таким именем уже есть. Возвращает ошибку.
+If no strategy is specified, the upload will be aborted in case of a name conflict.
 
-* Skip – не загружает файл, если такой уже есть. Возвращает информацию о существующем файле.
+## Authorization in Customers Canvas
 
-Если стратегия не указана, загрузка будет прервана в случае конфликта имен.
+The Customers Canvas system uses Identity Server 4 for the authorization process, supporting OAuth2 and Client Credentials flow using `clientId` and `clientSecret`.
 
-
-## Авторизация в Customers Canvas
-
-В системе Customers Canvas для организации процесса авторизации используется Identity Server 4, который обеспецивает возможность авторизации по clientId и clientSecret в соответствии со стандартом OAuth2 и Client credentials flow.
-
-Для работы с Customers Canvas необходимо получить доступ через CC_HUB_API_URL.
-
-В файле .env должны быть указаны параметры:
+To access Customers Canvas, use the `CC_HUB_API_URL`. The `.env` file should include the following parameters:
 
 ```
 CC_HUB_API_URL=<YOUR_API_URL>
@@ -476,4 +531,4 @@ CC_HUB_CLIENT_ID=<YOUR_CLIENT_ID>
 CC_HUB_CLIENT_SECRET=<YOUR_CLIENT_SECRET>
 ```
 
-Подробнее как получить эти параметры написано в [статье](https://customerscanvas.com/dev/backoffice/auth.html)
+For more details on obtaining these parameters, refer to [this article](https://customerscanvas.com/dev/backoffice/auth.html).
