@@ -132,3 +132,11 @@ Authorization: Bearer <your_token>
 # Run Docker-compose
 
 Before running docker-compose, enter your parameters in CC_HUB_API_URL, CC_HUB_CLIENT_ID, CC_HUB_CLIENT_SECRET in the docker-compose.yml file.
+
+Next, run the command:
+
+```
+docker-compose up --build
+```
+
+After this command, the project will start in the docker container.
