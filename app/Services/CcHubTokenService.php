@@ -16,6 +16,8 @@ class CcHubTokenService
     {
         $this->settingsModel = $settingsService->getSettings();
         $this->oidc = new OpenIDConnectClient($this->settingsModel->apiUrl, $this->settingsModel->clientId, $this->settingsModel->clientSecret);
+        $this->oidc->setVerifyHost(false);
+        $this->oidc->setVerifyPeer(false);
         $this->oidc->providerConfigParam(array('token_endpoint'=> $this->settingsModel->apiUrl.'connect/token'));
     }
 

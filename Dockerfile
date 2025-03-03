@@ -7,6 +7,8 @@ RUN apt-get update && apt-get install -y \
     default-mysql-client \
     && docker-php-ext-install zip
 
+RUN echo "upload_max_filesize=20M\npost_max_size=20M" > /usr/local/etc/php/conf.d/custom.ini
+
 RUN docker-php-ext-install fileinfo mysqli pdo pdo_mysql && docker-php-ext-enable pdo_mysql
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
