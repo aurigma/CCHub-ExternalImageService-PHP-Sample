@@ -69,14 +69,14 @@ class ImageProcessingService
 
     private function getDesignAtomsImageApi()
     {
-        $apiUrl = rtrim($this->ccHubSettingsModel->apiUrl, "/");
+        $apiUrl = rtrim($this->ccHubSettingsModel->apiUrl, '/');
 
         $client = new Client([
             // Base URI is used with relative requests
             'base_uri' => $apiUrl,
             // You can set any number of default request options.
             'timeout'  => 60.0,
-            'defaults' => array('verify' => false,),
+            'verify' => false,
         ]);
         $selector = new HeaderSelector();
         $config = new Configuration();
