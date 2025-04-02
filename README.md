@@ -131,4 +131,12 @@ Authorization: Bearer <your_token>
 
 # Run Docker-compose
 
-Before running docker-compose, enter your parameters in CC_HUB_API_URL, CC_HUB_CLIENT_IID, CC_HUB_CLIENT_SSECRET in the docker-compose.yml file.
+Before running docker-compose, enter your parameters in CC_HUB_API_URL, CC_HUB_CLIENT_ID, CC_HUB_CLIENT_SECRET in the docker-compose.yml file. You can also change the values of the upload_max_filesize and post_max_size parameters in the Dockerfile file. These parameters are responsible for the maximum file size during downloading and post-request.
+
+Next, run the command:
+
+```
+docker-compose up --build
+```
+
+After this command, the project will start in the docker container.
